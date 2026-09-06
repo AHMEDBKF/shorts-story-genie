@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CharactersRouteImport } from './routes/characters'
+import { Route as VideosIndexRouteImport } from './routes/videos.index'
+import { Route as VideosJobIdRouteImport } from './routes/videos.$jobId'
 import { Route as ApiPublicProductionTickRouteImport } from './routes/api/public/production-tick'
 import { Route as ApiPublicYoutubeCallbackRouteImport } from './routes/api/public/youtube/callback'
 
@@ -30,6 +32,16 @@ const CharactersRoute = CharactersRouteImport.update({
   path: '/characters',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VideosIndexRoute = VideosIndexRouteImport.update({
+  id: '/videos/',
+  path: '/videos/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VideosJobIdRoute = VideosJobIdRouteImport.update({
+  id: '/videos/$jobId',
+  path: '/videos/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicProductionTickRoute = ApiPublicProductionTickRouteImport.update({
   id: '/api/public/production-tick',
   path: '/api/public/production-tick',
@@ -46,6 +58,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/characters': typeof CharactersRoute
+  '/videos/$jobId': typeof VideosJobIdRoute
+  '/videos/': typeof VideosIndexRoute
   '/api/public/production-tick': typeof ApiPublicProductionTickRoute
   '/api/public/youtube/callback': typeof ApiPublicYoutubeCallbackRoute
 }
@@ -53,6 +67,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/characters': typeof CharactersRoute
+  '/videos/$jobId': typeof VideosJobIdRoute
+  '/videos': typeof VideosIndexRoute
   '/api/public/production-tick': typeof ApiPublicProductionTickRoute
   '/api/public/youtube/callback': typeof ApiPublicYoutubeCallbackRoute
 }
@@ -61,6 +77,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/characters': typeof CharactersRoute
+  '/videos/$jobId': typeof VideosJobIdRoute
+  '/videos/': typeof VideosIndexRoute
   '/api/public/production-tick': typeof ApiPublicProductionTickRoute
   '/api/public/youtube/callback': typeof ApiPublicYoutubeCallbackRoute
 }
@@ -70,6 +88,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/characters'
+    | '/videos/$jobId'
+    | '/videos/'
     | '/api/public/production-tick'
     | '/api/public/youtube/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -77,6 +97,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/characters'
+    | '/videos/$jobId'
+    | '/videos'
     | '/api/public/production-tick'
     | '/api/public/youtube/callback'
   id:
@@ -84,6 +106,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/characters'
+    | '/videos/$jobId'
+    | '/videos/'
     | '/api/public/production-tick'
     | '/api/public/youtube/callback'
   fileRoutesById: FileRoutesById
@@ -92,6 +116,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   CharactersRoute: typeof CharactersRoute
+  VideosJobIdRoute: typeof VideosJobIdRoute
+  VideosIndexRoute: typeof VideosIndexRoute
   ApiPublicProductionTickRoute: typeof ApiPublicProductionTickRoute
   ApiPublicYoutubeCallbackRoute: typeof ApiPublicYoutubeCallbackRoute
 }
@@ -119,6 +145,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CharactersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/videos/': {
+      id: '/videos/'
+      path: '/videos'
+      fullPath: '/videos/'
+      preLoaderRoute: typeof VideosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/videos/$jobId': {
+      id: '/videos/$jobId'
+      path: '/videos/$jobId'
+      fullPath: '/videos/$jobId'
+      preLoaderRoute: typeof VideosJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/production-tick': {
       id: '/api/public/production-tick'
       path: '/api/public/production-tick'
@@ -140,6 +180,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   CharactersRoute: CharactersRoute,
+  VideosJobIdRoute: VideosJobIdRoute,
+  VideosIndexRoute: VideosIndexRoute,
   ApiPublicProductionTickRoute: ApiPublicProductionTickRoute,
   ApiPublicYoutubeCallbackRoute: ApiPublicYoutubeCallbackRoute,
 }
