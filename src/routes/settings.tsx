@@ -96,7 +96,7 @@ function SettingsPage() {
   });
 
   const updateProfile = useMutation({
-    mutationFn: async (patch: Record<string, unknown>) => {
+    mutationFn: async (patch: { low_cost_mode?: boolean; default_language?: string }) => {
       const { error } = await supabase.from("profiles").update(patch).eq("id", userId!);
       if (error) throw error;
     },
@@ -149,16 +149,9 @@ function SettingsPage() {
               onCheckedChange={(checked) => updateProfile.mutate({ low_cost_mode: checked })}
             />
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <Label htmlFor="paid">السماح باستخدام مزوّدين مدفوعين</Label>
-            <Switch
-              id="paid"
-              checked={profile.data?.allow_paid_providers ?? false}
-              onCheckedChange={(checked) =>
-                updateProfile.mutate({ allow_paid_providers: checked })
-              }
-            />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            لن يُستخدم أي مزوّد مدفوع إلا بعد الموافقة عليه صراحة من قائمة المزوّدين بالأسفل.
+          </p>
         </CardContent>
       </Card>
 
