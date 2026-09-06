@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CharactersRouteImport } from './routes/characters'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as VideosIndexRouteImport } from './routes/videos.index'
 import { Route as VideosJobIdRouteImport } from './routes/videos.$jobId'
 import { Route as ApiPublicProductionTickRouteImport } from './routes/api/public/production-tick'
@@ -30,6 +31,11 @@ const AuthRoute = AuthRouteImport.update({
 const CharactersRoute = CharactersRouteImport.update({
   id: '/characters',
   path: '/characters',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VideosIndexRoute = VideosIndexRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/characters': typeof CharactersRoute
+  '/settings': typeof SettingsRoute
   '/videos/$jobId': typeof VideosJobIdRoute
   '/videos/': typeof VideosIndexRoute
   '/api/public/production-tick': typeof ApiPublicProductionTickRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/characters': typeof CharactersRoute
+  '/settings': typeof SettingsRoute
   '/videos/$jobId': typeof VideosJobIdRoute
   '/videos': typeof VideosIndexRoute
   '/api/public/production-tick': typeof ApiPublicProductionTickRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/characters': typeof CharactersRoute
+  '/settings': typeof SettingsRoute
   '/videos/$jobId': typeof VideosJobIdRoute
   '/videos/': typeof VideosIndexRoute
   '/api/public/production-tick': typeof ApiPublicProductionTickRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/characters'
+    | '/settings'
     | '/videos/$jobId'
     | '/videos/'
     | '/api/public/production-tick'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/characters'
+    | '/settings'
     | '/videos/$jobId'
     | '/videos'
     | '/api/public/production-tick'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/characters'
+    | '/settings'
     | '/videos/$jobId'
     | '/videos/'
     | '/api/public/production-tick'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   CharactersRoute: typeof CharactersRoute
+  SettingsRoute: typeof SettingsRoute
   VideosJobIdRoute: typeof VideosJobIdRoute
   VideosIndexRoute: typeof VideosIndexRoute
   ApiPublicProductionTickRoute: typeof ApiPublicProductionTickRoute
@@ -143,6 +156,13 @@ declare module '@tanstack/react-router' {
       path: '/characters'
       fullPath: '/characters'
       preLoaderRoute: typeof CharactersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/videos/': {
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   CharactersRoute: CharactersRoute,
+  SettingsRoute: SettingsRoute,
   VideosJobIdRoute: VideosJobIdRoute,
   VideosIndexRoute: VideosIndexRoute,
   ApiPublicProductionTickRoute: ApiPublicProductionTickRoute,
