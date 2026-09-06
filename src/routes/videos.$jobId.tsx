@@ -57,10 +57,10 @@ function VideoDetail() {
         scenes: scenes.data ?? [],
         video: video.data,
         imageBySceneId: new Map(
-          (images.data ?? []).map((row) => [row.scene_id, urls.get(row.storage_path) ?? ""]),
+          (images.data ?? []).map((row) => [row.scene_id ?? "", urls.get(row.storage_path) ?? ""]),
         ),
         audioBySceneId: new Map(
-          (audio.data ?? []).map((row) => [row.scene_id, urls.get(row.storage_path) ?? ""]),
+          (audio.data ?? []).map((row) => [row.scene_id ?? "", urls.get(row.storage_path) ?? ""]),
         ),
       };
     },
