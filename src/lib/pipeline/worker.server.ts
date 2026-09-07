@@ -4,7 +4,7 @@ import { STEPS, STEP_RUNNERS, type StepName } from "./pipeline.server";
 
 const LOCK_KEY = "production-worker";
 const LOCK_SECONDS = 120;
-const MAX_STEPS_PER_TICK = 3;
+const MAX_STEPS_PER_TICK = 14;
 const MAX_ATTEMPTS = 3;
 
 async function acquireLock(holder: string) {
