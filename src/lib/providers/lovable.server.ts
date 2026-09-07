@@ -4,6 +4,7 @@
  * inside each call, and the pipeline only ever sees the provider interface.
  */
 import type {
+  CharacterRef,
   ImageProvider,
   SceneDraft,
   StoryDraft,
