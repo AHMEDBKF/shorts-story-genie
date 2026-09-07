@@ -436,16 +436,48 @@ async function buildSubtitles(job: Job): Promise<StepResult> {
 }
 
 async function renderVideo(job: Job): Promise<StepResult> {
+  const { shotstackKey, submitShotstackRender } = await import("@/lib/render/shotstack.server");
+
+  const { data: video } = await supabaseAdmin
+    .from("videos")
+    .select("render_status, render_job_id")
+    .eq("job_id", job.id)
+    .maybeSingle();
+
+  if (video?.render_status === "rendered") {
+    return { done: true, detail: "الفيديو النهائي جاهز." };
+  }
+
+  if (!shotstackKey()) {
+    await supabaseAdmin
+      .from("videos")
+      .update({ render_status: "awaiting_renderer" })
+      .eq("job_id", job.id);
+    return {
+      done: true,
+      blocked: true,
+      detail: "كل العناصر جاهزة. التركيب النهائي بانتظار خدمة التركيب.",
+    };
+  }
+
+  if (video?.render_status === "rendering" && video.render_job_id) {
+    return { done: true, blocked: true, detail: "جاري تركيب الفيديو لدى خدمة التركيب." };
+  }
+
+  const renderId = await submitShotstackRender(job.id);
   await supabaseAdmin
     .from("videos")
-    .update({ render_status: "awaiting_renderer" })
+    .update({
+      render_status: "rendering",
+      render_provider: "shotstack",
+      render_job_id: renderId,
+      render_submitted_at: new Date().toISOString(),
+    })
     .eq("job_id", job.id);
-  return {
-    done: true,
-    blocked: true,
-    detail: "كل العناصر جاهزة. التركيب النهائي بانتظار خدمة التركيب.",
-  };
+
+  return { done: true, blocked: true, detail: "تم إرسال الفيديو للتركيب النهائي." };
 }
+
 
 async function qualityCheck(job: Job): Promise<StepResult> {
   const [{ data: scenes }, { data: images }, { data: audio }, { data: video }] =
