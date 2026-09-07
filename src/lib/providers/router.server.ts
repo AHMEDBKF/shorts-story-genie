@@ -50,7 +50,8 @@ export async function resolveProviders<T extends AnyProvider>(
   if (error) throw new Error(error.message);
 
   const usable = (data ?? []).filter((row) => {
-    if (lowCostMode && row.cost_tier !== "free") return false;
+    // Low Cost Mode: free and low-cost providers only, never a paid one.
+    if (lowCostMode && row.cost_tier === "paid") return false;
     if (row.cost_tier === "paid" && !row.approved) return false;
     if (row.requires_approval && !row.approved) return false;
     return Boolean(REGISTRY[capability][row.key]);
