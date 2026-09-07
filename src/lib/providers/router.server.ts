@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { lovableImage, lovableText, lovableVoice } from "./lovable.server";
 import { mockImage, mockMusic, mockText, mockVoice } from "./mock.server";
 import type {
   Capability,
@@ -16,9 +17,9 @@ type AnyProvider = TextProvider | ImageProvider | VoiceProvider | MusicProvider;
  * in the pipeline changes.
  */
 export const REGISTRY: Record<Capability, Record<string, AnyProvider>> = {
-  text: { "mock-text": mockText },
-  image: { "mock-image": mockImage },
-  voice: { "mock-voice": mockVoice },
+  text: { "lovable-text": lovableText, "mock-text": mockText },
+  image: { "lovable-image": lovableImage, "mock-image": mockImage },
+  voice: { "lovable-voice": lovableVoice, "mock-voice": mockVoice },
   music: { "mock-music": mockMusic },
 };
 
@@ -49,7 +50,8 @@ export async function resolveProviders<T extends AnyProvider>(
   if (error) throw new Error(error.message);
 
   const usable = (data ?? []).filter((row) => {
-    if (lowCostMode && row.cost_tier !== "free") return false;
+    // Low Cost Mode: free and low-cost providers only, never a paid one.
+    if (lowCostMode && row.cost_tier === "paid") return false;
     if (row.cost_tier === "paid" && !row.approved) return false;
     if (row.requires_approval && !row.approved) return false;
     return Boolean(REGISTRY[capability][row.key]);
