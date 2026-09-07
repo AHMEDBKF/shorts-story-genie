@@ -79,8 +79,11 @@ export async function createProductionJob(
 async function loadCharacters(userId: string): Promise<CharacterRef[]> {
   const { data } = await supabaseAdmin
     .from("characters")
-    .select("name, personality, appearance, clothes, visual_style")
+    .select(
+      "name, description, personality, appearance, clothes, visual_style, reference_image_url",
+    )
     .eq("user_id", userId)
+    .order("is_default", { ascending: false })
     .order("created_at", { ascending: true })
     .limit(4);
   if (data && data.length > 0) return data;
