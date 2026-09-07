@@ -178,6 +178,7 @@ export type Database = {
           appearance: string | null
           clothes: string | null
           created_at: string
+          description: string | null
           id: string
           is_default: boolean
           name: string
@@ -191,6 +192,7 @@ export type Database = {
           appearance?: string | null
           clothes?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           is_default?: boolean
           name: string
@@ -204,6 +206,7 @@ export type Database = {
           appearance?: string | null
           clothes?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           is_default?: boolean
           name?: string
