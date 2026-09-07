@@ -16,7 +16,10 @@ export interface VideoRenderer {
   submit(jobId: string, context: RendererContext): Promise<string>;
   /** Asks the renderer how a submitted render is doing. */
   poll(renderId: string, context: RendererContext): Promise<RenderStatus>;
+  /** Optional: asks the renderer to stop a running render. */
+  cancel?(renderId: string, context: RendererContext): Promise<void>;
 }
+
 
 export interface RendererContext {
   userId: string;
