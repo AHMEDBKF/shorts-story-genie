@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -96,7 +97,13 @@ function SettingsPage() {
   });
 
   const updateProfile = useMutation({
-    mutationFn: async (patch: { low_cost_mode?: boolean; default_language?: string }) => {
+    mutationFn: async (patch: {
+      low_cost_mode?: boolean;
+      default_language?: string;
+      render_provider?: string;
+      allow_paid_renderer?: boolean;
+      ffmpeg_worker_url?: string | null;
+    }) => {
       const { error } = await supabase.from("profiles").update(patch).eq("id", userId!);
       if (error) throw error;
     },
@@ -211,6 +218,64 @@ function SettingsPage() {
       </Card>
 
       <Card className="mt-4 rounded-3xl">
+        <CardHeader>
+          <CardTitle className="font-display text-base">مُركِّب الفيديو</CardTitle>
+          <CardDescription>
+            يختار النظام تلقائياً مُركِّباً مجانياً. لن تُستخدم أي خدمة مدفوعة إلا بعد تفعيلها هنا.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>المُركِّب المفضّل</Label>
+            <Select
+              value={profile.data?.render_provider ?? "auto"}
+              onValueChange={(value) => updateProfile.mutate({ render_provider: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">تلقائي (الأوفر تكلفة أولاً)</SelectItem>
+                <SelectItem value="ffmpeg">مُركِّب FFmpeg الخاص بك</SelectItem>
+                <SelectItem value="shotstack">Shotstack (مدفوع)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="ffmpeg-url">عنوان مُركِّب FFmpeg</Label>
+            <Input
+              id="ffmpeg-url"
+              dir="ltr"
+              placeholder="https://my-render-worker.example.com/render"
+              defaultValue={profile.data?.ffmpeg_worker_url ?? ""}
+              onBlur={(event: React.FocusEvent<HTMLInputElement>) =>
+                updateProfile.mutate({ ffmpeg_worker_url: event.target.value.trim() || null })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              اتركه فارغاً الآن. عند تجهيز مُركِّبك الخاص، ألصق عنوانه هنا وسيبدأ العمل مباشرة.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <Label htmlFor="allow-paid">السماح باستخدام مُركِّب مدفوع</Label>
+            <Switch
+              id="allow-paid"
+              checked={profile.data?.allow_paid_renderer ?? false}
+              onCheckedChange={(checked) =>
+                updateProfile.mutate({ allow_paid_renderer: checked })
+              }
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            إن فشل المُركِّب المختار، يُعاد إرسال المهمة تلقائياً ويُجرَّب البديل المتاح المجاني.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-4 rounded-3xl">
+
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-display text-base">
             <Youtube className="size-4" /> يوتيوب

@@ -60,27 +60,68 @@ export async function completeRender(
 
 /** Backstop for missed callbacks: checks renders that are still in progress. */
 export async function pollPendingRenders(): Promise<string[]> {
-  const { pollShotstackRender, shotstackKey } = await import("./shotstack.server");
-  if (!shotstackKey()) return [];
+  const { getRenderer, loadRendererSettings } = await import("./registry.server");
 
   const { data: rows } = await supabaseAdmin
     .from("videos")
-    .select("job_id, user_id, render_job_id")
+    .select("job_id, user_id, render_job_id, render_provider")
     .eq("render_status", "rendering")
-    .eq("render_provider", "shotstack")
     .limit(5);
 
   const log: string[] = [];
   for (const row of rows ?? []) {
-    if (!row.render_job_id) continue;
-    const result = await pollShotstackRender(row.render_job_id);
-    if (result.status === "done") {
-      const stored = await completeRender(row.job_id, row.user_id, result.url);
-      log.push(`${row.job_id}: ${stored.ok ? "rendered" : stored.error}`);
-    } else if (result.status === "failed") {
-      await failRender(row.job_id, result.error);
-      log.push(`${row.job_id}: ${result.error}`);
+    const renderer = getRenderer(row.render_provider);
+    if (!renderer || !row.render_job_id) continue;
+    const settings = await loadRendererSettings(row.user_id);
+    try {
+      const result = await renderer.poll(row.render_job_id, settings.context);
+      if (result.status === "done") {
+        const stored = await completeRender(row.job_id, row.user_id, result.url);
+        log.push(`${row.job_id}: ${stored.ok ? "rendered" : stored.error}`);
+      } else if (result.status === "failed") {
+        await retryRender(row.job_id, result.error);
+        log.push(`${row.job_id}: ${result.error}`);
+      }
+    } catch (error) {
+      log.push(`${row.job_id}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   return log;
+}
+
+/**
+ * A failed render is not the end of the production: the assembly step is put
+ * back in the queue so the next tick can try again (or use another renderer).
+ */
+export async function retryRender(jobId: string, reason: string) {
+  const { data: attempt } = await supabaseAdmin
+    .from("job_steps")
+    .select("attempts")
+    .eq("job_id", jobId)
+    .eq("step", "render_video")
+    .maybeSingle();
+
+  if ((attempt?.attempts ?? 0) >= 3) {
+    await failRender(jobId, reason);
+    return;
+  }
+
+  await supabaseAdmin
+    .from("videos")
+    .update({ render_status: "pending", render_job_id: null })
+    .eq("job_id", jobId);
+  await supabaseAdmin
+    .from("job_steps")
+    .update({ status: "pending", detail: `إعادة المحاولة: ${reason}` })
+    .eq("job_id", jobId)
+    .eq("step", "render_video");
+  await supabaseAdmin
+    .from("production_jobs")
+    .update({
+      status: "queued",
+      paused_reason: null,
+      paused_at: null,
+      next_run_at: new Date().toISOString(),
+    })
+    .eq("id", jobId);
 }

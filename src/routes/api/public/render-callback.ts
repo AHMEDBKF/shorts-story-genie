@@ -18,7 +18,7 @@ async function handle(request: Request) {
   }
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { completeRender, failRender } = await import("@/lib/render/complete.server");
+  const { completeRender, retryRender } = await import("@/lib/render/complete.server");
   const { data: job } = await supabaseAdmin
     .from("production_jobs")
     .select("id, user_id")
@@ -27,7 +27,7 @@ async function handle(request: Request) {
   if (!job) return Response.json({ error: "job not found" }, { status: 404 });
 
   if (body.error) {
-    await failRender(job.id, body.error);
+    await retryRender(job.id, body.error);
     return Response.json({ ok: true, status: "failed" });
   }
 

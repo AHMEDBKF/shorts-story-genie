@@ -469,30 +469,39 @@ export type Database = {
       }
       profiles: {
         Row: {
+          allow_paid_renderer: boolean
           created_at: string
           default_language: string
           display_name: string | null
           email: string | null
+          ffmpeg_worker_url: string | null
           id: string
           low_cost_mode: boolean
+          render_provider: string
           updated_at: string
         }
         Insert: {
+          allow_paid_renderer?: boolean
           created_at?: string
           default_language?: string
           display_name?: string | null
           email?: string | null
+          ffmpeg_worker_url?: string | null
           id: string
           low_cost_mode?: boolean
+          render_provider?: string
           updated_at?: string
         }
         Update: {
+          allow_paid_renderer?: boolean
           created_at?: string
           default_language?: string
           display_name?: string | null
           email?: string | null
+          ffmpeg_worker_url?: string | null
           id?: string
           low_cost_mode?: boolean
+          render_provider?: string
           updated_at?: string
         }
         Relationships: []
