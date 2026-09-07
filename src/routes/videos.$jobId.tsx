@@ -116,8 +116,8 @@ function VideoDetail() {
             <CardTitle className="font-display text-base">فحص الجودة</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {report.checks.map((check) => (
-              <div key={check.name} className="flex items-start gap-2 text-sm">
+            {report.checks.map((check, index) => (
+              <div key={`${check.name}-${index}`} className="flex items-start gap-2 text-sm">
                 {check.ok ? (
                   <CheckCircle2 className="mt-0.5 size-4 text-mint" />
                 ) : (

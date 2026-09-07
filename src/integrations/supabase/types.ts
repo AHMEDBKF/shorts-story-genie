@@ -837,6 +837,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      verify_worker_token: { Args: { _token: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"

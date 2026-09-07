@@ -54,12 +54,27 @@ async function handle() {
   });
 }
 
+/**
+ * Secondary caller check: the scheduled database job signs its request with a
+ * token that only the database and this server can read.
+ */
+async function schedulerTokenMatches(request: Request): Promise<boolean> {
+  const token = /^Bearer ([^\s,]+)$/.exec(request.headers.get("authorization") ?? "")?.[1];
+  if (!token) return false;
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.rpc("verify_worker_token", { _token: token });
+  return !error && data === true;
+}
+
 export const Route = createFileRoute("/api/public/production-tick")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const denied = await authenticateCronRequest(request);
-        if (denied) return denied;
+        if (denied) {
+          if (!(await schedulerTokenMatches(request))) return denied;
+        }
         return handle();
       },
     },
