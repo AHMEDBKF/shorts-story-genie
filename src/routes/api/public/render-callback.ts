@@ -18,6 +18,7 @@ async function handle(request: Request) {
   }
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { completeRender, failRender } = await import("@/lib/render/complete.server");
   const { data: job } = await supabaseAdmin
     .from("production_jobs")
     .select("id, user_id")
@@ -26,14 +27,7 @@ async function handle(request: Request) {
   if (!job) return Response.json({ error: "job not found" }, { status: 404 });
 
   if (body.error) {
-    await supabaseAdmin
-      .from("videos")
-      .update({ render_status: "failed" })
-      .eq("job_id", job.id);
-    await supabaseAdmin
-      .from("production_jobs")
-      .update({ status: "paused", paused_reason: body.error, paused_at: new Date().toISOString() })
-      .eq("id", job.id);
+    await failRender(job.id, body.error);
     return Response.json({ ok: true, status: "failed" });
   }
 
@@ -41,46 +35,11 @@ async function handle(request: Request) {
     return Response.json({ error: "videoUrl or error is required" }, { status: 400 });
   }
 
-  const source = await fetch(body.videoUrl);
-  if (!source.ok) {
-    return Response.json({ error: `could not fetch video (${source.status})` }, { status: 400 });
-  }
-  const bytes = new Uint8Array(await source.arrayBuffer());
-  const path = `${job.user_id}/${job.id}/final.mp4`;
-  const { error: uploadError } = await supabaseAdmin.storage
-    .from("media")
-    .upload(path, bytes, { contentType: "video/mp4", upsert: true });
-  if (uploadError) return Response.json({ error: uploadError.message }, { status: 500 });
-
-  await supabaseAdmin
-    .from("videos")
-    .update({ storage_path: path, render_status: "rendered" })
-    .eq("job_id", job.id);
-
-  // Resume the production: the render step is done, the upload step runs next.
-  await supabaseAdmin
-    .from("job_steps")
-    .update({ status: "completed", detail: "تم استلام الفيديو النهائي." })
-    .eq("job_id", job.id)
-    .eq("step", "render_video");
-  await supabaseAdmin
-    .from("job_steps")
-    .update({ status: "pending", detail: null, attempts: 0 })
-    .eq("job_id", job.id)
-    .in("step", ["quality_check", "upload_youtube"]);
-  await supabaseAdmin
-    .from("production_jobs")
-    .update({
-      status: "queued",
-      paused_reason: null,
-      paused_at: null,
-      finished_at: null,
-      next_run_at: new Date().toISOString(),
-    })
-    .eq("id", job.id);
-
-  return Response.json({ ok: true, status: "rendered", storagePath: path });
+  const stored = await completeRender(job.id, job.user_id, body.videoUrl);
+  if (!stored.ok) return Response.json({ error: stored.error }, { status: stored.status });
+  return Response.json({ ok: true, status: "rendered", storagePath: stored.storagePath });
 }
+
 
 export const Route = createFileRoute("/api/public/render-callback")({
   server: {
