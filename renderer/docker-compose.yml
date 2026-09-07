@@ -1,0 +1,30 @@
+services:
+  renderer:
+    build: .
+    image: kids-shorts-ffmpeg-renderer:latest
+    container_name: kids-shorts-renderer
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+    ports:
+      - "${RENDERER_PORT:-8080}:${RENDERER_PORT:-8080}"
+    volumes:
+      - renderer-data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://127.0.0.1:${RENDERER_PORT:-8080}/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
+volumes:
+  renderer-data:
