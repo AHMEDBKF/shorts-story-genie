@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -96,7 +97,13 @@ function SettingsPage() {
   });
 
   const updateProfile = useMutation({
-    mutationFn: async (patch: { low_cost_mode?: boolean; default_language?: string }) => {
+    mutationFn: async (patch: {
+      low_cost_mode?: boolean;
+      default_language?: string;
+      render_provider?: string;
+      allow_paid_renderer?: boolean;
+      ffmpeg_worker_url?: string | null;
+    }) => {
       const { error } = await supabase.from("profiles").update(patch).eq("id", userId!);
       if (error) throw error;
     },
