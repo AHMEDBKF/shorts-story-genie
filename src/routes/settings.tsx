@@ -44,12 +44,71 @@ export const Route = createFileRoute("/settings")({
 
 const DAYS = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
+const RENDERER_CONTRACT = `Authorization: Bearer <FFMPEG_WORKER_TOKEN>  (on every request)
+
+GET  /health
+  200 { "status": "healthy", "ffmpeg": "6.1", "queue": 0 }
+
+POST /render                         -> async, respond immediately
+  {
+    "jobId": "uuid",
+    "callbackUrl": "https://<app>/api/public/render-callback",
+    "callbackToken": "<same bearer token>",
+    "output": { "format":"mp4","codec":"h264","audioCodec":"aac",
+                "width":1080,"height":1920,"fps":25,"crf":21,"preset":"medium" },
+    "subtitles": { "burnIn": true, "language": "ar", "direction": "rtl" },
+    "kenBurns": { "enabled": true, "intensity": 0.12 },
+    "timeline": {
+      "totalSeconds": 42.5,
+      "scenes": [{ "sceneNumber":1, "start":0, "length":7.4,
+                   "imageUrl":"https://…signed", "audioUrl":"https://…signed",
+                   "caption":"…", "animation":"zoom-in" }],
+      "subtitlesVtt": "WEBVTT …", "musicUrl": null
+    },
+    "test": false
+  }
+  202 { "renderId": "rnd_…", "status": "queued" }
+  400 | 401 | 429 { "error": "…" }
+
+GET  /render/{renderId}
+  200 { "renderId":"rnd_…", "jobId":"uuid", "status":"processing",
+        "progress":42, "stage":"encoding", "url":null, "error":null }
+      status: queued | processing | completed | failed | cancelled
+  404 unknown render id
+
+POST /render/{renderId}/cancel
+  200 { "renderId":"rnd_…", "status":"cancelled" }
+
+Callback (renderer -> app), same bearer token:
+  POST callbackUrl { "jobId":"uuid", "renderId":"rnd_…",
+                     "status":"completed", "videoUrl":"https://…/final.mp4" }
+  POST callbackUrl { "jobId":"uuid", "status":"failed", "error":"…" }
+  POST callbackUrl { "jobId":"uuid", "status":"processing", "progress":60 }
+
+Rendering: 1080x1920 @25fps, gentle Ken Burns per scene (zoom in/out, pan
+left/right), scenes synced to narration, Arabic RTL subtitles burned in with
+libass + an Arabic font, optional music mixed ~-18dB, H.264 yuv420p + AAC
+128k, +faststart. Full document: docs/FFMPEG_RENDERER_API.md`;
+
 function SettingsPage() {
   const { loading, userId } = useRequireAuth();
   const queryClient = useQueryClient();
   const authUrlFn = useServerFn(getYoutubeAuthUrl);
   const disconnectFn = useServerFn(disconnectYoutube);
   const statusFn = useServerFn(getYoutubeStatus);
+  const testRendererFn = useServerFn(testFfmpegRenderer);
+  const [showContract, setShowContract] = useState(false);
+
+  const testRenderer = useMutation({
+    mutationFn: () => testRendererFn(),
+    onSuccess: (result) =>
+      result.ok
+        ? toast.success("المُركِّب جاهز للعمل")
+        : toast.error("المُركِّب غير جاهز بعد"),
+    onError: (error: unknown) =>
+      toast.error(error instanceof Error ? error.message : "تعذّر الفحص"),
+  });
+
 
   const profile = useQuery({
     queryKey: ["profile", userId],
