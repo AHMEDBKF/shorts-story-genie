@@ -63,18 +63,8 @@ async function schedulerTokenMatches(request: Request): Promise<boolean> {
   if (!token) return false;
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
-    .schema("vault")
-    .from("decrypted_secrets")
-    .select("decrypted_secret")
-    .eq("name", "worker_tick_token")
-    .maybeSingle();
-
-  const expected = (data as { decrypted_secret?: string } | null)?.decrypted_secret;
-  if (!expected || expected.length !== token.length) return false;
-
-  const { timingSafeEqual } = await import("node:crypto");
-  return timingSafeEqual(Buffer.from(token), Buffer.from(expected));
+  const { data, error } = await supabaseAdmin.rpc("verify_worker_token", { _token: token });
+  return !error && data === true;
 }
 
 export const Route = createFileRoute("/api/public/production-tick")({
