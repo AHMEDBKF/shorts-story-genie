@@ -774,11 +774,14 @@ export type Database = {
       youtube_uploads: {
         Row: {
           created_at: string
+          description: string | null
           error: string | null
           id: string
           job_id: string | null
           privacy_status: string
+          published_at: string | null
           status: string
+          title: string | null
           updated_at: string
           user_id: string
           video_id: string | null
@@ -786,11 +789,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
           error?: string | null
           id?: string
           job_id?: string | null
           privacy_status?: string
+          published_at?: string | null
           status?: string
+          title?: string | null
           updated_at?: string
           user_id: string
           video_id?: string | null
@@ -798,11 +804,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
           error?: string | null
           id?: string
           job_id?: string | null
           privacy_status?: string
+          published_at?: string | null
           status?: string
+          title?: string | null
           updated_at?: string
           user_id?: string
           video_id?: string | null

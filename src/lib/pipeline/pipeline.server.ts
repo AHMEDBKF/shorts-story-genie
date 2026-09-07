@@ -482,36 +482,12 @@ async function qualityCheck(job: Job): Promise<StepResult> {
 }
 
 async function uploadYoutube(job: Job): Promise<StepResult> {
-  const { data: video } = await supabaseAdmin
-    .from("videos")
-    .select("id, storage_path, render_status")
-    .eq("job_id", job.id)
-    .maybeSingle();
-  const { data: account } = await supabaseAdmin
-    .from("youtube_accounts")
-    .select("id, channel_title")
-    .eq("user_id", job.user_id)
-    .maybeSingle();
-
-  if (!video?.storage_path) {
-    await supabaseAdmin.from("youtube_uploads").upsert({
-      user_id: job.user_id,
-      job_id: job.id,
-      video_id: video?.id ?? null,
-      status: "awaiting_video",
-      privacy_status: "private",
-    });
-    return {
-      done: true,
-      blocked: true,
-      detail: "الرفع ينتظر ملف الفيديو النهائي.",
-    };
-  }
-  if (!account) {
-    return { done: true, blocked: true, detail: "لم يتم ربط قناة يوتيوب بعد." };
-  }
-  return { done: true, blocked: true, detail: "جاهز للرفع." };
+  const { uploadRenderToYoutube } = await import("@/lib/youtube/upload.server");
+  const outcome = await uploadRenderToYoutube(job.id, job.user_id);
+  if (outcome.status === "failed") throw new Error(outcome.detail);
+  return { done: true, blocked: outcome.status !== "uploaded", detail: outcome.detail };
 }
+
 
 export const STEP_RUNNERS: Record<StepName, (job: Job) => Promise<StepResult>> = {
   pick_topic: pickTopic,

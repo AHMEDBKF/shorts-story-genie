@@ -4,7 +4,7 @@ import { STEPS, STEP_RUNNERS, type StepName } from "./pipeline.server";
 
 const LOCK_KEY = "production-worker";
 const LOCK_SECONDS = 120;
-const MAX_STEPS_PER_TICK = 3;
+const MAX_STEPS_PER_TICK = 14;
 const MAX_ATTEMPTS = 3;
 
 async function acquireLock(holder: string) {
@@ -74,6 +74,29 @@ export async function runWorkerTick() {
         .maybeSingle();
 
       if (!step) {
+        const { data: blocked } = await supabaseAdmin
+          .from("job_steps")
+          .select("step, detail")
+          .eq("job_id", job.id)
+          .eq("status", "blocked")
+          .order("position", { ascending: true });
+
+        if ((blocked?.length ?? 0) > 0) {
+          const reason = blocked?.map((row) => row.detail).filter(Boolean).join(" — ") ?? "";
+          await supabaseAdmin
+            .from("production_jobs")
+            .update({
+              status: "paused",
+              progress: 100,
+              paused_reason: reason || "بانتظار خطوة خارجية.",
+              paused_at: new Date().toISOString(),
+              finished_at: new Date().toISOString(),
+            })
+            .eq("id", job.id);
+          log.push(`job ${job.id} waiting: ${reason}`);
+          continue;
+        }
+
         await supabaseAdmin
           .from("production_jobs")
           .update({ status: "completed", progress: 100, finished_at: new Date().toISOString() })
@@ -81,6 +104,7 @@ export async function runWorkerTick() {
         log.push(`job ${job.id} completed`);
         continue;
       }
+
 
       await supabaseAdmin
         .from("production_jobs")
