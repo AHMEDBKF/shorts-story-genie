@@ -114,7 +114,7 @@ export const mockText: TextProvider = {
       characters: index === 0 || index === 1 ? [hero] : [hero, friend],
       dialogue: beat.dialogue,
       narration: beat.narration,
-      imagePrompt: `${beat.description} — ${style}، إطار عمودي 9:16، إضاءة ناعمة، نفس الشخصيات ونفس الملابس في كل المشاهد.`,
+      imagePrompt: `${beat.description} — ${style}، إطار عمودي 9:16، إضاءة ناعمة. أوصاف الشخصيات الثابتة: ${sheet}. حافظ على نفس الوجوه ونفس الملابس في كل المشاهد.`,
       animation: beat.animation,
       soundEffects: beat.sfx,
       durationSeconds: index === 0 ? 6 : 9,
