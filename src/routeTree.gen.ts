@@ -17,6 +17,7 @@ import { Route as VideosIndexRouteImport } from './routes/videos.index'
 import { Route as VideosJobIdRouteImport } from './routes/videos.$jobId'
 import { Route as ApiPublicProductionTickRouteImport } from './routes/api/public/production-tick'
 import { Route as ApiPublicRenderCallbackRouteImport } from './routes/api/public/render-callback'
+import { Route as ApiPublicShotstackCallbackRouteImport } from './routes/api/public/shotstack-callback'
 import { Route as ApiPublicYoutubeCallbackRouteImport } from './routes/api/public/youtube/callback'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +60,12 @@ const ApiPublicRenderCallbackRoute = ApiPublicRenderCallbackRouteImport.update({
   path: '/api/public/render-callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicShotstackCallbackRoute =
+  ApiPublicShotstackCallbackRouteImport.update({
+    id: '/api/public/shotstack-callback',
+    path: '/api/public/shotstack-callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicYoutubeCallbackRoute =
   ApiPublicYoutubeCallbackRouteImport.update({
     id: '/api/public/youtube/callback',
@@ -75,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/videos/': typeof VideosIndexRoute
   '/api/public/production-tick': typeof ApiPublicProductionTickRoute
   '/api/public/render-callback': typeof ApiPublicRenderCallbackRoute
+  '/api/public/shotstack-callback': typeof ApiPublicShotstackCallbackRoute
   '/api/public/youtube/callback': typeof ApiPublicYoutubeCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -86,6 +94,7 @@ export interface FileRoutesByTo {
   '/videos': typeof VideosIndexRoute
   '/api/public/production-tick': typeof ApiPublicProductionTickRoute
   '/api/public/render-callback': typeof ApiPublicRenderCallbackRoute
+  '/api/public/shotstack-callback': typeof ApiPublicShotstackCallbackRoute
   '/api/public/youtube/callback': typeof ApiPublicYoutubeCallbackRoute
 }
 export interface FileRoutesById {
@@ -98,6 +107,7 @@ export interface FileRoutesById {
   '/videos/': typeof VideosIndexRoute
   '/api/public/production-tick': typeof ApiPublicProductionTickRoute
   '/api/public/render-callback': typeof ApiPublicRenderCallbackRoute
+  '/api/public/shotstack-callback': typeof ApiPublicShotstackCallbackRoute
   '/api/public/youtube/callback': typeof ApiPublicYoutubeCallbackRoute
 }
 export interface FileRouteTypes {
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/videos/'
     | '/api/public/production-tick'
     | '/api/public/render-callback'
+    | '/api/public/shotstack-callback'
     | '/api/public/youtube/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/videos'
     | '/api/public/production-tick'
     | '/api/public/render-callback'
+    | '/api/public/shotstack-callback'
     | '/api/public/youtube/callback'
   id:
     | '__root__'
@@ -133,6 +145,7 @@ export interface FileRouteTypes {
     | '/videos/'
     | '/api/public/production-tick'
     | '/api/public/render-callback'
+    | '/api/public/shotstack-callback'
     | '/api/public/youtube/callback'
   fileRoutesById: FileRoutesById
 }
@@ -145,6 +158,7 @@ export interface RootRouteChildren {
   VideosIndexRoute: typeof VideosIndexRoute
   ApiPublicProductionTickRoute: typeof ApiPublicProductionTickRoute
   ApiPublicRenderCallbackRoute: typeof ApiPublicRenderCallbackRoute
+  ApiPublicShotstackCallbackRoute: typeof ApiPublicShotstackCallbackRoute
   ApiPublicYoutubeCallbackRoute: typeof ApiPublicYoutubeCallbackRoute
 }
 
@@ -206,6 +220,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRenderCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/shotstack-callback': {
+      id: '/api/public/shotstack-callback'
+      path: '/api/public/shotstack-callback'
+      fullPath: '/api/public/shotstack-callback'
+      preLoaderRoute: typeof ApiPublicShotstackCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/youtube/callback': {
       id: '/api/public/youtube/callback'
       path: '/api/public/youtube/callback'
@@ -225,6 +246,7 @@ const rootRouteChildren: RootRouteChildren = {
   VideosIndexRoute: VideosIndexRoute,
   ApiPublicProductionTickRoute: ApiPublicProductionTickRoute,
   ApiPublicRenderCallbackRoute: ApiPublicRenderCallbackRoute,
+  ApiPublicShotstackCallbackRoute: ApiPublicShotstackCallbackRoute,
   ApiPublicYoutubeCallbackRoute: ApiPublicYoutubeCallbackRoute,
 }
 export const routeTree = rootRouteImport

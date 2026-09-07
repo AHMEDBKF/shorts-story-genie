@@ -46,13 +46,18 @@ async function handle() {
       .eq("id", schedule.id);
   }
 
-  // 2. Advance a bounded amount of pipeline work.
+  // 2. Backstop for the external assembly service, in case a callback is missed.
+  const { pollPendingRenders } = await import("@/lib/render/complete.server");
+  const renders = await pollPendingRenders();
+
+  // 3. Advance a bounded amount of pipeline work.
   const tick = await runWorkerTick();
 
-  return new Response(JSON.stringify({ created, tick }), {
+  return new Response(JSON.stringify({ created, renders, tick }), {
     headers: { "content-type": "application/json" },
   });
 }
+
 
 /**
  * Secondary caller check: the scheduled database job signs its request with a

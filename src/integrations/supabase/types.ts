@@ -680,7 +680,10 @@ export type Database = {
           job_id: string
           public_url: string | null
           quality_report: Json | null
+          render_job_id: string | null
+          render_provider: string | null
           render_status: string
+          render_submitted_at: string | null
           storage_path: string | null
           subtitles_vtt: string | null
           tags: string[]
@@ -698,7 +701,10 @@ export type Database = {
           job_id: string
           public_url?: string | null
           quality_report?: Json | null
+          render_job_id?: string | null
+          render_provider?: string | null
           render_status?: string
+          render_submitted_at?: string | null
           storage_path?: string | null
           subtitles_vtt?: string | null
           tags?: string[]
@@ -716,7 +722,10 @@ export type Database = {
           job_id?: string
           public_url?: string | null
           quality_report?: Json | null
+          render_job_id?: string | null
+          render_provider?: string | null
           render_status?: string
+          render_submitted_at?: string | null
           storage_path?: string | null
           subtitles_vtt?: string | null
           tags?: string[]
