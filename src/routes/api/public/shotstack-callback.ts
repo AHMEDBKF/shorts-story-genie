@@ -16,7 +16,7 @@ async function handle(request: Request) {
   if (!body?.id) return Response.json({ error: "id is required" }, { status: 400 });
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { completeRender, failRender } = await import("@/lib/render/complete.server");
+  const { completeRender, retryRender } = await import("@/lib/render/complete.server");
 
   const { data: video } = await supabaseAdmin
     .from("videos")
@@ -26,7 +26,7 @@ async function handle(request: Request) {
   if (!video) return Response.json({ error: "unknown render" }, { status: 404 });
 
   if (body.status === "failed" || body.error) {
-    await failRender(video.job_id, body.error ?? "فشل التركيب النهائي.");
+    await retryRender(video.job_id, body.error ?? "فشل التركيب النهائي.");
     return Response.json({ ok: true, status: "failed" });
   }
 
