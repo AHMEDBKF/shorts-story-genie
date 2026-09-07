@@ -436,7 +436,9 @@ async function buildSubtitles(job: Job): Promise<StepResult> {
 }
 
 async function renderVideo(job: Job): Promise<StepResult> {
-  const { shotstackKey, submitShotstackRender } = await import("@/lib/render/shotstack.server");
+  const { loadRendererSettings, resolveRenderers } = await import(
+    "@/lib/render/registry.server"
+  );
 
   const { data: video } = await supabaseAdmin
     .from("videos")
@@ -448,7 +450,14 @@ async function renderVideo(job: Job): Promise<StepResult> {
     return { done: true, detail: "الفيديو النهائي جاهز." };
   }
 
-  if (!shotstackKey()) {
+  if (video?.render_status === "rendering" && video.render_job_id) {
+    return { done: true, blocked: true, detail: "جاري تركيب الفيديو." };
+  }
+
+  const settings = await loadRendererSettings(job.user_id);
+  const renderers = await resolveRenderers(settings);
+
+  if (renderers.length === 0) {
     await supabaseAdmin
       .from("videos")
       .update({ render_status: "awaiting_renderer" })
@@ -456,26 +465,31 @@ async function renderVideo(job: Job): Promise<StepResult> {
     return {
       done: true,
       blocked: true,
-      detail: "كل العناصر جاهزة. التركيب النهائي بانتظار خدمة التركيب.",
+      detail: "كل العناصر جاهزة. التركيب النهائي بانتظار تفعيل مُركِّب فيديو.",
     };
   }
 
-  if (video?.render_status === "rendering" && video.render_job_id) {
-    return { done: true, blocked: true, detail: "جاري تركيب الفيديو لدى خدمة التركيب." };
+  // Try each usable renderer in order; fall back to the next one on failure.
+  let lastError: unknown;
+  for (const renderer of renderers) {
+    try {
+      const renderId = await renderer.submit(job.id, settings.context);
+      await supabaseAdmin
+        .from("videos")
+        .update({
+          render_status: "rendering",
+          render_provider: renderer.key,
+          render_job_id: renderId,
+          render_submitted_at: new Date().toISOString(),
+        })
+        .eq("job_id", job.id);
+      return { done: true, blocked: true, detail: `تم إرسال الفيديو إلى ${renderer.label}.` };
+    } catch (error) {
+      lastError = error;
+    }
   }
 
-  const renderId = await submitShotstackRender(job.id);
-  await supabaseAdmin
-    .from("videos")
-    .update({
-      render_status: "rendering",
-      render_provider: "shotstack",
-      render_job_id: renderId,
-      render_submitted_at: new Date().toISOString(),
-    })
-    .eq("job_id", job.id);
-
-  return { done: true, blocked: true, detail: "تم إرسال الفيديو للتركيب النهائي." };
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
 
