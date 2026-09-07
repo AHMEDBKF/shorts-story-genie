@@ -57,6 +57,20 @@ export const mockText: TextProvider = {
     const style =
       characters[0]?.visual_style ??
       "رسوم كرتونية ثلاثية الأبعاد ناعمة، ألوان دافئة، مناسبة للأطفال";
+    const sheet = characters.length
+      ? characters
+          .map((character) =>
+            [
+              character.name,
+              character.appearance,
+              character.clothes,
+              character.description,
+            ]
+              .filter(Boolean)
+              .join(" — "),
+          )
+          .join(" | ")
+      : `${hero}: طفل بقميص أحمر | ${friend}: طفلة بفستان أخضر`;
     const beats = [
       {
         description: `لقطة افتتاحية: ${hero} يقف في حديقة مشرقة والكاميرا تقترب منه.`,
