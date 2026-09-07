@@ -249,7 +249,7 @@ function SettingsPage() {
               dir="ltr"
               placeholder="https://my-render-worker.example.com/render"
               defaultValue={profile.data?.ffmpeg_worker_url ?? ""}
-              onBlur={(event) =>
+              onBlur={(event: React.FocusEvent<HTMLInputElement>) =>
                 updateProfile.mutate({ ffmpeg_worker_url: event.target.value.trim() || null })
               }
             />
