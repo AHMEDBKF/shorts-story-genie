@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Youtube } from "lucide-react";
+import { CheckCircle2, XCircle, Youtube } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useRequireAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { testFfmpegRenderer } from "@/lib/render.functions";
+
 import {
   disconnectYoutube,
   getYoutubeAuthUrl,
@@ -258,6 +261,50 @@ function SettingsPage() {
             </p>
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              className="rounded-2xl"
+              disabled={testRenderer.isPending}
+              onClick={() => testRenderer.mutate()}
+            >
+              {testRenderer.isPending ? "جارٍ الفحص…" : "اختبار الاتصال بمُركِّب FFmpeg"}
+            </Button>
+            <Button
+              variant="ghost"
+              className="rounded-2xl"
+              onClick={() => setShowContract((value) => !value)}
+            >
+              {showContract ? "إخفاء دليل التكامل" : "دليل التكامل للمطوّر"}
+            </Button>
+          </div>
+
+          {testRenderer.data ? (
+            <ul className="space-y-1 rounded-2xl bg-secondary/50 p-3 text-sm">
+              {testRenderer.data.checks.map((check) => (
+                <li key={check.name} className="flex items-start gap-2">
+                  {check.ok ? (
+                    <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                  ) : (
+                    <XCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
+                  )}
+                  <span>
+                    <strong>{check.name}:</strong> {check.detail}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {showContract ? (
+            <pre
+              dir="ltr"
+              className="max-h-96 overflow-auto rounded-2xl bg-secondary/50 p-3 text-left text-xs leading-relaxed"
+            >
+              {RENDERER_CONTRACT}
+            </pre>
+          ) : null}
+
           <div className="flex items-center justify-between gap-4">
             <Label htmlFor="allow-paid">السماح باستخدام مُركِّب مدفوع</Label>
             <Switch
@@ -273,6 +320,7 @@ function SettingsPage() {
           </p>
         </CardContent>
       </Card>
+
 
       <Card className="mt-4 rounded-3xl">
 
