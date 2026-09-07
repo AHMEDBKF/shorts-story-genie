@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { lovableImage, lovableText, lovableVoice } from "./lovable.server";
 import { mockImage, mockMusic, mockText, mockVoice } from "./mock.server";
 import type {
   Capability,
@@ -16,9 +17,9 @@ type AnyProvider = TextProvider | ImageProvider | VoiceProvider | MusicProvider;
  * in the pipeline changes.
  */
 export const REGISTRY: Record<Capability, Record<string, AnyProvider>> = {
-  text: { "mock-text": mockText },
-  image: { "mock-image": mockImage },
-  voice: { "mock-voice": mockVoice },
+  text: { "lovable-text": lovableText, "mock-text": mockText },
+  image: { "lovable-image": lovableImage, "mock-image": mockImage },
+  voice: { "lovable-voice": lovableVoice, "mock-voice": mockVoice },
   music: { "mock-music": mockMusic },
 };
 
