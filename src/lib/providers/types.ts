@@ -30,10 +30,12 @@ export interface VideoMetaDraft {
 
 export interface CharacterRef {
   name: string;
+  description?: string | null;
   personality?: string | null;
   appearance?: string | null;
   clothes?: string | null;
   visual_style?: string | null;
+  reference_image_url?: string | null;
 }
 
 export interface TextProvider {

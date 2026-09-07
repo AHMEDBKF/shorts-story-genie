@@ -57,6 +57,20 @@ export const mockText: TextProvider = {
     const style =
       characters[0]?.visual_style ??
       "رسوم كرتونية ثلاثية الأبعاد ناعمة، ألوان دافئة، مناسبة للأطفال";
+    const sheet = characters.length
+      ? characters
+          .map((character) =>
+            [
+              character.name,
+              character.appearance,
+              character.clothes,
+              character.description,
+            ]
+              .filter(Boolean)
+              .join(" — "),
+          )
+          .join(" | ")
+      : `${hero}: طفل بقميص أحمر | ${friend}: طفلة بفستان أخضر`;
     const beats = [
       {
         description: `لقطة افتتاحية: ${hero} يقف في حديقة مشرقة والكاميرا تقترب منه.`,
@@ -100,7 +114,7 @@ export const mockText: TextProvider = {
       characters: index === 0 || index === 1 ? [hero] : [hero, friend],
       dialogue: beat.dialogue,
       narration: beat.narration,
-      imagePrompt: `${beat.description} — ${style}، إطار عمودي 9:16، إضاءة ناعمة، نفس الشخصيات ونفس الملابس في كل المشاهد.`,
+      imagePrompt: `${beat.description} — ${style}، إطار عمودي 9:16، إضاءة ناعمة. أوصاف الشخصيات الثابتة: ${sheet}. حافظ على نفس الوجوه ونفس الملابس في كل المشاهد.`,
       animation: beat.animation,
       soundEffects: beat.sfx,
       durationSeconds: index === 0 ? 6 : 9,
