@@ -74,17 +74,17 @@ async function chatJson<T>(system: string, user: string): Promise<T> {
   return parseJson<T>(content);
 }
 
-function castSheet(characters: { name: string; [key: string]: unknown }[]) {
+function castSheet(characters: CharacterRef[]) {
   if (characters.length === 0) return "لا توجد شخصيات محفوظة، استخدم سميرًا وليلى.";
   return characters
     .map((character) =>
       [
         `الاسم: ${character.name}`,
-        character["description"] && `الوصف: ${character["description"]}`,
-        character["personality"] && `الطباع: ${character["personality"]}`,
-        character["appearance"] && `الشكل: ${character["appearance"]}`,
-        character["clothes"] && `الملابس: ${character["clothes"]}`,
-        character["visual_style"] && `الأسلوب البصري: ${character["visual_style"]}`,
+        character.description && `الوصف: ${character.description}`,
+        character.personality && `الطباع: ${character.personality}`,
+        character.appearance && `الشكل: ${character.appearance}`,
+        character.clothes && `الملابس: ${character.clothes}`,
+        character.visual_style && `الأسلوب البصري: ${character.visual_style}`,
       ]
         .filter(Boolean)
         .join("، "),
