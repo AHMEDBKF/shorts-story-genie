@@ -50,10 +50,10 @@ type Job = {
 export const TEST_MODE_SCENES = 3;
 export const TEST_MODE_SECONDS = 12;
 
-function planFor(job: Job) {
+function planFor(job: Job): { sceneCount?: number; targetSeconds?: number } {
   return job.test_mode
     ? { sceneCount: TEST_MODE_SCENES, targetSeconds: TEST_MODE_SECONDS }
-    : { sceneCount: undefined, targetSeconds: undefined };
+    : {};
 }
 
 export type StepResult = { done: boolean; detail: string; blocked?: boolean };
@@ -209,7 +209,7 @@ async function writeStory(job: Job): Promise<StepResult> {
         language: job.language,
         prompt: job.request_prompt,
         characters,
-        targetSeconds: planFor(job).targetSeconds,
+        ...planFor(job),
       }),
   );
 
@@ -261,8 +261,7 @@ async function splitScenes(job: Job): Promise<StepResult> {
         topic,
         language: job.language,
         characters,
-        sceneCount: planFor(job).sceneCount,
-        targetSeconds: planFor(job).targetSeconds,
+        ...planFor(job),
       }),
   );
 
