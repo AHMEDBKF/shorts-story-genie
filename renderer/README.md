@@ -7,6 +7,9 @@ A standalone Docker service that turns a Kids Shorts AI timeline into a
 It is independent of the app: deploy it to any VPS or Docker host, point Kids
 Shorts AI at its URL, and share one secret key between the two.
 
+Full server guide: [`DEPLOYMENT.md`](./DEPLOYMENT.md).
+End-to-end test checklist: [`../docs/END_TO_END_TEST.md`](../docs/END_TO_END_TEST.md).
+
 ## Deploy in three commands
 
 ```bash
@@ -44,7 +47,8 @@ Everything else has production-safe defaults
 
 All require `Authorization: Bearer <RENDERER_API_KEY>`.
 
-- `GET /health` — FFmpeg version and queue depth.
+- `GET /health` — API uptime, FFmpeg version, queue depth and storage writability
+  (`503 degraded` when FFmpeg or storage is unavailable).
 - `POST /render` — accepts a timeline, returns `202 { renderId, status: "queued" }`.
 - `GET /render/{renderId}` — status, progress 0–100, stage, url, error.
 - `POST /render/{renderId}/cancel` — kills the FFmpeg process, `409` when finished.

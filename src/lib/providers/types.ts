@@ -47,12 +47,17 @@ export interface TextProvider {
     language: string;
     prompt?: string | null;
     characters: CharacterRef[];
+    /** Target narration length in seconds (test mode asks for a short one). */
+    targetSeconds?: number;
   }): Promise<StoryDraft>;
   splitScenes(input: {
     story: StoryDraft;
     topic: string;
     language: string;
     characters: CharacterRef[];
+    /** How many scenes to produce (test mode asks for 3). */
+    sceneCount?: number;
+    targetSeconds?: number;
   }): Promise<SceneDraft[]>;
   writeMetadata(input: {
     story: StoryDraft;

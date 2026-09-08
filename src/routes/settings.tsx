@@ -8,6 +8,7 @@ import { AppShell } from "@/components/AppShell";
 import { useRequireAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { testFfmpegRenderer } from "@/lib/render.functions";
+import { getDeploymentChecklist } from "@/lib/deployment.functions";
 
 import {
   disconnectYoutube,
@@ -97,6 +98,7 @@ function SettingsPage() {
   const disconnectFn = useServerFn(disconnectYoutube);
   const statusFn = useServerFn(getYoutubeStatus);
   const testRendererFn = useServerFn(testFfmpegRenderer);
+  const checklistFn = useServerFn(getDeploymentChecklist);
   const [showContract, setShowContract] = useState(false);
 
   const testRenderer = useMutation({
@@ -152,6 +154,12 @@ function SettingsPage() {
     },
   });
 
+  const checklist = useQuery({
+    queryKey: ["deployment-checklist", userId],
+    enabled: Boolean(userId),
+    queryFn: () => checklistFn(),
+  });
+
   const youtube = useQuery({
     queryKey: ["youtube-status", userId],
     enabled: Boolean(userId),
@@ -164,6 +172,7 @@ function SettingsPage() {
       default_language?: string;
       render_provider?: string;
       allow_paid_renderer?: boolean;
+      test_mode?: boolean;
       ffmpeg_worker_url?: string | null;
     }) => {
       const { error } = await supabase.from("profiles").update(patch).eq("id", userId!);
@@ -220,6 +229,19 @@ function SettingsPage() {
           </div>
           <p className="text-xs text-muted-foreground">
             لن يُستخدم أي مزوّد مدفوع إلا بعد الموافقة عليه صراحة من قائمة المزوّدين بالأسفل.
+          </p>
+
+          <div className="flex items-center justify-between gap-4">
+            <Label htmlFor="test-mode">وضع الاختبار</Label>
+            <Switch
+              id="test-mode"
+              checked={profile.data?.test_mode ?? false}
+              onCheckedChange={(checked) => updateProfile.mutate({ test_mode: checked })}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            ينتج فيديو تجريبياً قصيراً من 3 مشاهد (10–15 ثانية) بأقل تكلفة ممكنة، لتجربة المسار
+            الكامل قبل الإنتاج الحقيقي.
           </p>
         </CardContent>
       </Card>
@@ -424,6 +446,41 @@ function SettingsPage() {
               ربط قناة يوتيوب
             </Button>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="mt-4 rounded-3xl">
+        <CardHeader>
+          <CardTitle className="font-display text-base">قائمة التحقق قبل الإطلاق</CardTitle>
+          <CardDescription>
+            كل بند يُفحص مباشرة من الخادم. لا تظهر أي مفاتيح سرية هنا.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {checklist.isPending ? (
+            <p className="text-sm text-muted-foreground">جارٍ الفحص…</p>
+          ) : (
+            checklist.data?.items.map((item) => (
+              <div key={item.key} className="flex items-start gap-2 rounded-2xl bg-secondary/50 px-3 py-2 text-sm">
+                {item.ok ? (
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                ) : (
+                  <XCircle className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                )}
+                <span className="min-w-0">
+                  <span className="font-medium">{item.label}</span>
+                  <span className="block text-xs text-muted-foreground">{item.detail}</span>
+                </span>
+              </div>
+            ))
+          )}
+          <Button
+            variant="outline"
+            className="rounded-2xl"
+            onClick={() => void checklist.refetch()}
+          >
+            تحديث القائمة
+          </Button>
         </CardContent>
       </Card>
 

@@ -52,7 +52,7 @@ export async function runWorkerTick() {
     for (let i = 0; i < MAX_STEPS_PER_TICK; i += 1) {
       const { data: job } = await supabaseAdmin
         .from("production_jobs")
-        .select("id, user_id, language, low_cost_mode, request_prompt, topic_id, status")
+        .select("id, user_id, language, low_cost_mode, request_prompt, topic_id, status, test_mode")
         .in("status", ["queued", "running"])
         .lte("next_run_at", new Date().toISOString())
         .order("created_at", { ascending: true })

@@ -413,6 +413,7 @@ export type Database = {
           request_prompt: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["job_status"]
+          test_mode: boolean
           topic_id: string | null
           updated_at: string
           user_id: string
@@ -433,6 +434,7 @@ export type Database = {
           request_prompt?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["job_status"]
+          test_mode?: boolean
           topic_id?: string | null
           updated_at?: string
           user_id: string
@@ -453,6 +455,7 @@ export type Database = {
           request_prompt?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["job_status"]
+          test_mode?: boolean
           topic_id?: string | null
           updated_at?: string
           user_id?: string
@@ -478,6 +481,7 @@ export type Database = {
           id: string
           low_cost_mode: boolean
           render_provider: string
+          test_mode: boolean
           updated_at: string
         }
         Insert: {
@@ -490,6 +494,7 @@ export type Database = {
           id: string
           low_cost_mode?: boolean
           render_provider?: string
+          test_mode?: boolean
           updated_at?: string
         }
         Update: {
@@ -502,6 +507,7 @@ export type Database = {
           id?: string
           low_cost_mode?: boolean
           render_provider?: string
+          test_mode?: boolean
           updated_at?: string
         }
         Relationships: []

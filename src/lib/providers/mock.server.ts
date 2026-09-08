@@ -51,7 +51,7 @@ export const mockText: TextProvider = {
       estimatedSeconds: 45,
     } satisfies StoryDraft;
   },
-  async splitScenes({ story, topic, characters }) {
+  async splitScenes({ story, topic, characters, sceneCount, targetSeconds }) {
     const hero = characters[0]?.name ?? "سمير";
     const friend = characters[1]?.name ?? "ليلى";
     const style =
@@ -108,7 +108,11 @@ export const mockText: TextProvider = {
         sfx: "موسيقى ختامية هادئة",
       },
     ];
-    return beats.map((beat, index) => ({
+    const count = Math.max(2, Math.min(beats.length, Math.round(sceneCount ?? beats.length)));
+    const picked = count >= beats.length ? beats : [beats[0]!, beats[2]!, beats[beats.length - 1]!].slice(0, count);
+    const total = Math.max(10, Math.min(60, Math.round(targetSeconds ?? story.estimatedSeconds ?? 45)));
+    const each = Math.max(3, Math.round((total / picked.length) * 10) / 10);
+    return picked.map((beat, index) => ({
       sceneNumber: index + 1,
       description: beat.description,
       characters: index === 0 || index === 1 ? [hero] : [hero, friend],
@@ -117,7 +121,7 @@ export const mockText: TextProvider = {
       imagePrompt: `${beat.description} — ${style}، إطار عمودي 9:16، إضاءة ناعمة. أوصاف الشخصيات الثابتة: ${sheet}. حافظ على نفس الوجوه ونفس الملابس في كل المشاهد.`,
       animation: beat.animation,
       soundEffects: beat.sfx,
-      durationSeconds: index === 0 ? 6 : 9,
+      durationSeconds: each,
     })) satisfies SceneDraft[];
   },
   async writeMetadata({ story, topic }) {
