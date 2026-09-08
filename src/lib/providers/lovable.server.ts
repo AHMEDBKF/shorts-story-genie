@@ -97,13 +97,17 @@ export const lovableText: TextProvider = {
   key: "lovable-text",
   label: "نصوص Lovable AI",
   costTier: "low",
-  async writeStory({ topic, language, prompt, characters }) {
+  async writeStory({ topic, language, prompt, characters, targetSeconds }) {
+    const target = Math.max(10, Math.min(60, Math.round(targetSeconds ?? 45)));
+    const short = target < 25;
     const story = await chatJson<StoryDraft>(
       "أنت كاتب قصص أطفال محترف. تكتب قصصاً أصلية قصيرة وآمنة تماماً للأطفال، بلغة بسيطة وواضحة. أعد الإجابة بصيغة JSON فقط.",
       [
         `اكتب قصة قصيرة للأطفال باللغة ${language === "ar" ? "العربية الفصحى المبسّطة" : language} عن: ${topic}.`,
         prompt ? `طلب إضافي من المستخدم: ${prompt}` : "",
-        "مدة القراءة المستهدفة بين 30 و60 ثانية (حوالي 90 إلى 150 كلمة).",
+        short
+          ? `مدة القراءة المستهدفة حوالي ${target} ثانية فقط (من 30 إلى 45 كلمة).`
+          : "مدة القراءة المستهدفة بين 30 و60 ثانية (حوالي 90 إلى 150 كلمة).",
         "استخدم هذه الشخصيات الثابتة بأسمائها كما هي:",
         castSheet(characters),
         'أعد JSON بالمفاتيح: {"title","hook","body","lesson","ending","estimatedSeconds"}.',
@@ -117,14 +121,18 @@ export const lovableText: TextProvider = {
       body: story.body,
       lesson: story.lesson ?? "",
       ending: story.ending ?? "",
-      estimatedSeconds: Math.min(60, Math.max(30, Number(story.estimatedSeconds) || 45)),
+      estimatedSeconds: short
+        ? target
+        : Math.min(60, Math.max(30, Number(story.estimatedSeconds) || 45)),
     };
   },
-  async splitScenes({ story, topic, language, characters }) {
+  async splitScenes({ story, topic, language, characters, sceneCount, targetSeconds }) {
+    const count = Math.max(0, Math.min(8, Math.round(sceneCount ?? 0)));
+    const total = Math.max(10, Math.min(60, Math.round(targetSeconds ?? story.estimatedSeconds ?? 45)));
     const data = await chatJson<{ scenes: SceneDraft[] }>(
       "أنت مخرج فيديوهات قصيرة للأطفال. تقسم القصص إلى مشاهد عمودية 9:16. أعد الإجابة بصيغة JSON فقط.",
       [
-        `قسّم هذه القصة إلى 5 أو 6 مشاهد باللغة ${language === "ar" ? "العربية" : language}:`,
+        `قسّم هذه القصة إلى ${count || "5 أو 6"} مشاهد باللغة ${language === "ar" ? "العربية" : language}:`,
         `العنوان: ${story.title}`,
         `الموضوع: ${topic}`,
         `النص: ${story.body}`,
@@ -132,11 +140,12 @@ export const lovableText: TextProvider = {
         "الشخصيات الثابتة (يجب أن تظهر بنفس الشكل والملابس في كل مشهد):",
         castSheet(characters),
         'أعد JSON بالشكل: {"scenes":[{"sceneNumber","description","characters":["اسم"],"dialogue","narration","imagePrompt","animation","soundEffects","durationSeconds"}]}.',
-        "اجعل مجموع durationSeconds بين 30 و60. واجعل imagePrompt وصفاً بصرياً مفصلاً بالإنجليزية يذكر أوصاف الشخصيات وملابسها وإطار 9:16.",
+        `اجعل مجموع durationSeconds قريباً من ${total} ثانية. واجعل imagePrompt وصفاً بصرياً مفصلاً بالإنجليزية يذكر أوصاف الشخصيات وملابسها وإطار 9:16.`,
       ].join("\n"),
     );
-    const scenes = Array.isArray(data.scenes) ? data.scenes : [];
+    let scenes = Array.isArray(data.scenes) ? data.scenes : [];
     if (scenes.length === 0) throw new Error("لم يُرجع النموذج أي مشاهد");
+    if (count && scenes.length > count) scenes = scenes.slice(0, count);
     return scenes.map((scene, index) => ({
       sceneNumber: index + 1,
       description: scene.description ?? "",
