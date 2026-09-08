@@ -132,6 +132,7 @@ export async function runWorkerTick() {
           low_cost_mode: job.low_cost_mode,
           request_prompt: job.request_prompt,
           topic_id: job.topic_id,
+          test_mode: job.test_mode,
         });
 
         if (result.done) {
