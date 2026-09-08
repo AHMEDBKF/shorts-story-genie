@@ -97,3 +97,29 @@ async function signV4({ url, method, region, accessKeyId, secretAccessKey, body,
     authorization: `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
   };
 }
+
+/**
+ * Production health probe: verifies the storage target is actually usable.
+ * local -> writes and deletes a temp file in the output volume.
+ * s3    -> checks that every required S3_* variable is present.
+ */
+export async function storageHealth() {
+  if (config.storageDriver === "s3") {
+    const { endpoint, bucket, accessKeyId, secretAccessKey } = config.s3;
+    const ok = Boolean(endpoint && bucket && accessKeyId && secretAccessKey);
+    return { driver: "s3", writable: ok, detail: ok ? "configured" : "S3_* variables incomplete" };
+  }
+  const probe = path.join(config.outputDir, `.health-${crypto.randomBytes(6).toString("hex")}`);
+  try {
+    await fs.mkdir(config.outputDir, { recursive: true });
+    await fs.writeFile(probe, "ok");
+    await fs.rm(probe, { force: true });
+    return {
+      driver: "local",
+      writable: true,
+      detail: config.publicBaseUrl ? "writable" : "writable (PUBLIC_BASE_URL not set)",
+    };
+  } catch (error) {
+    return { driver: "local", writable: false, detail: String(error?.message ?? error) };
+  }
+}

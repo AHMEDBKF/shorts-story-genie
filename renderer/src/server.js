@@ -5,6 +5,7 @@ import { config } from "./config.js";
 import { ffmpegVersion } from "./ffmpeg.js";
 import { cleanup, kick, queueDepth, recoverAfterRestart } from "./queue.js";
 import { createJob, initStore, readJob, updateJob } from "./store.js";
+import { storageHealth } from "./storage.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -23,15 +24,33 @@ function authorize(req, res, next) {
 }
 
 app.get("/health", authorize, async (_req, res) => {
+  // Reports every subsystem: API, FFmpeg, job queue and storage access.
+  const report = {
+    status: "healthy",
+    version: config.version,
+    api: { ok: true, uptimeSeconds: Math.round(process.uptime()) },
+    ffmpeg: null,
+    queue: null,
+    storage: null,
+  };
   try {
-    res.json({
-      status: "healthy",
-      ffmpeg: await ffmpegVersion(),
-      queue: await queueDepth(),
-      version: config.version,
-    });
+    const [version, depth, storage] = await Promise.all([
+      ffmpegVersion(),
+      queueDepth(),
+      storageHealth(),
+    ]);
+    report.ffmpeg = version;
+    report.queue = depth;
+    report.ffmpegHealth = { ok: Boolean(version), version };
+    report.queueHealth = { ok: true, depth, maxConcurrent: config.maxConcurrentRenders };
+    report.storage = storage;
+    const healthy = Boolean(version) && storage.writable;
+    report.status = healthy ? "healthy" : "degraded";
+    res.status(healthy ? 200 : 503).json(report);
   } catch (error) {
-    res.status(500).json({ status: "unhealthy", error: String(error?.message ?? error) });
+    res
+      .status(500)
+      .json({ ...report, status: "unhealthy", error: String(error?.message ?? error) });
   }
 });
 
