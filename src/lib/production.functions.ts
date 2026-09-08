@@ -25,13 +25,14 @@ export const startProduction = createServerFn({ method: "POST" })
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .select("low_cost_mode, default_language")
+      .select("low_cost_mode, default_language, test_mode")
       .eq("id", context.userId)
       .maybeSingle();
 
     const jobId = await createProductionJob(context.userId, {
       prompt: data.prompt || null,
       lowCostMode: profile?.low_cost_mode ?? true,
+      testMode: profile?.test_mode ?? false,
       language: profile?.default_language ?? "ar",
     });
 

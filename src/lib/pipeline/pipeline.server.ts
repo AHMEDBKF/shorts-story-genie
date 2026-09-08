@@ -43,13 +43,29 @@ type Job = {
   low_cost_mode: boolean;
   request_prompt: string | null;
   topic_id: string | null;
+  test_mode?: boolean | null;
 };
+
+/** Production Test Mode: a short 3-scene proof video (~12s). */
+export const TEST_MODE_SCENES = 3;
+export const TEST_MODE_SECONDS = 12;
+
+function planFor(job: Job) {
+  return job.test_mode
+    ? { sceneCount: TEST_MODE_SCENES, targetSeconds: TEST_MODE_SECONDS }
+    : { sceneCount: undefined, targetSeconds: undefined };
+}
 
 export type StepResult = { done: boolean; detail: string; blocked?: boolean };
 
 export async function createProductionJob(
   userId: string,
-  options: { prompt?: string | null; language?: string; lowCostMode: boolean },
+  options: {
+    prompt?: string | null;
+    language?: string;
+    lowCostMode: boolean;
+    testMode?: boolean;
+  },
 ) {
   const { data: job, error } = await supabaseAdmin
     .from("production_jobs")
@@ -58,6 +74,7 @@ export async function createProductionJob(
       request_prompt: options.prompt ?? null,
       language: options.language ?? "ar",
       low_cost_mode: options.lowCostMode,
+      test_mode: options.testMode ?? false,
       status: "queued",
     })
     .select("id")
@@ -192,6 +209,7 @@ async function writeStory(job: Job): Promise<StepResult> {
         language: job.language,
         prompt: job.request_prompt,
         characters,
+        targetSeconds: planFor(job).targetSeconds,
       }),
   );
 
@@ -243,6 +261,8 @@ async function splitScenes(job: Job): Promise<StepResult> {
         topic,
         language: job.language,
         characters,
+        sceneCount: planFor(job).sceneCount,
+        targetSeconds: planFor(job).targetSeconds,
       }),
   );
 
@@ -509,7 +529,17 @@ async function qualityCheck(job: Job): Promise<StepResult> {
   const duration = Number(video?.duration_seconds ?? 0);
   const descriptions = (scenes ?? []).map((scene) => (scene.description ?? "").trim());
   const checks = [
-    { key: "المدة بين 30 و60 ثانية", pass: duration >= 25 && duration <= 65, value: `${Math.round(duration)} ث` },
+    job.test_mode
+      ? {
+          key: "مدة الفيديو التجريبي بين 8 و25 ثانية",
+          pass: duration >= 8 && duration <= 25,
+          value: `${Math.round(duration)} ث`,
+        }
+      : {
+          key: "المدة بين 30 و60 ثانية",
+          pass: duration >= 25 && duration <= 65,
+          value: `${Math.round(duration)} ث`,
+        },
     { key: "الإطار عمودي 9:16", pass: video?.width === 1080 && video?.height === 1920, value: "1080×1920" },
     { key: "يوجد صوت لكل مشهد", pass: (audio ?? []).length >= (scenes ?? []).length, value: `${audio?.length ?? 0}` },
     { key: "توجد ترجمة", pass: Boolean(video?.subtitles_vtt), value: video?.subtitles_vtt ? "نعم" : "لا" },
